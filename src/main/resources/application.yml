@@ -1,0 +1,86 @@
+spring:
+  application:
+    name: currency-wallet-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/walletdb
+    driver-class-name: org.postgresql.Driver
+    username: wallet_user
+    password: wallet_pass
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: redispass
+      timeout: 2000ms
+      jedis:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: wallet-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.finance.wallet.dto"
+        spring.json.use.type.headers: false
+      auto-offset-reset: earliest
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+logging:
+  level:
+    com.finance.wallet: DEBUG
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+wallet:
+  fx:
+    api:
+      url: https://api.exchangerate-api.com/v4/latest/
+    cache-ttl: 60s
+  kafka:
+    topics:
+      transactions: wallet.txn
+  rate-limiting:
+    enabled: true
+    capacity: 20
+    refill-rate: 20
+    refill-period: 1m
+  jwt:
+    secret: mySecretKey1234567890abcdefghijklmnopqrstuvwxyz
+    expiration-hours: 24
